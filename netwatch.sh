@@ -20,6 +20,8 @@ WATCH_MODE=false
 FILTER_LISTEN=false
 FILTER_ESTABLISHED=false
 OUTPUT_FILE=""
+AI_MODE=false
+QUICK_MODE=false
 
 # Fun banner because we're not boring!
 print_banner() {
@@ -44,6 +46,7 @@ show_help() {
     echo "  -e, --established     Show only established connections"
     echo "  -o, --output FILE     Save output to file"
     echo "  -q, --quick           Quick summary only"
+    echo "  -a, --ai              Enable AI security advisor (requires API)"
     echo "  -h, --help           Show this help message"
     echo
     echo -e "${CYAN}Examples:${NC}"
@@ -55,6 +58,9 @@ show_help() {
     echo
     echo "  # Watch only listening services"
     echo "  $0 -w -l"
+    echo
+    echo "  # Analysis with AI security advisor"
+    echo "  $0 -a"
     echo
     echo "  # Quick one-time check with output to file"
     echo "  $0 -q -o network_report.txt"
@@ -91,6 +97,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -q|--quick)
             QUICK_MODE=true
+            shift
+            ;;
+        -a|--ai)
+            AI_MODE=true
             shift
             ;;
         -h|--help)
@@ -143,7 +153,13 @@ run_scan() {
         done
     else
         # Full analysis mode
-        $LSOF_CMD 2>/dev/null | $LSOF_FILTER | python3 network_analyzer.py
+        if [ "$AI_MODE" = true ]; then
+            # Run with AI advisor enabled
+            echo -e "${CYAN}🤖 AI Security Advisor Mode Enabled${NC}"
+            $LSOF_CMD 2>/dev/null | $LSOF_FILTER | python3 network_analyzer.py --ai
+        else
+            $LSOF_CMD 2>/dev/null | $LSOF_FILTER | python3 network_analyzer.py
+        fi
     fi
     
     # Save to file if requested

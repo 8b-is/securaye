@@ -8,8 +8,11 @@ Aye and Hue's collaborative network detective tool!
 import re
 import sys
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import json
+import os
+import requests
+from datetime import datetime
 
 # ANSI color codes for our beautiful terminal output
 class Colors:
@@ -363,6 +366,9 @@ class NetworkAnalyzer:
             print(f"    5. Use SSH keys instead of passwords, disable root login")
         print(f"    6. Consider using a firewall (pf/iptables) to restrict access")
         print(f"    7. Regular security audits with 'netwatch.sh -w'")
+        
+        print(f"\n{Colors.GREEN}{'=' * 80}{Colors.END}")
+        print(f"{Colors.BOLD}Analysis complete! Stay secure, Hue! 🛡️{Colors.END}\n")
     
     def _assess_port_risk(self, port: int) -> str:
         """Assess the risk level of a port - Trish's risk calculator"""
@@ -387,24 +393,190 @@ class NetworkAnalyzer:
             '172.30.', '172.31.', '192.168.', 'fe80:', 'fd'
         ]
         return any(ip.startswith(r) for r in private_ranges)
+    
+    def get_ai_recommendations(self, enable_ai: bool = False) -> Optional[Dict]:
+        """Get AI-powered security recommendations if enabled - the smart stuff!"""
+        if not enable_ai:
+            return None
+        
+        # Check if the security advisor API is running
+        api_url = os.getenv('SECURITY_ADVISOR_URL', 'http://localhost:8888')
+        
+        try:
+            # Prepare data for AI analysis
+            services_data = []
+            for listener in self.listeners:
+                if 'port' in listener:
+                    # Determine interface from name field
+                    interface = '*' if '*:' in listener.get('name', '') else '127.0.0.1'
+                    services_data.append({
+                        'command': listener['command'],
+                        'port': listener['port'],
+                        'protocol': listener.get('protocol', 'TCP'),
+                        'user': listener['user'],
+                        'state': listener.get('state', 'LISTENING'),
+                        'interface': interface
+                    })
+            
+            # Calculate current security score
+            all_interface_listeners = [l for l in self.listeners 
+                                      if '*:' in l.get('name', '') or '0.0.0.0' in l.get('name', '')]
+            suspicious_ports = [p for p in [23, 6379, 27017, 9200] if p in self.services_by_port]
+            root_services = [l for l in self.listeners if l.get('user') == 'root' and l.get('port', 0) > 1024]
+            
+            score = 100
+            score -= len(all_interface_listeners) * 10
+            score -= len(suspicious_ports) * 5
+            score -= len(root_services) * 2
+            score = max(0, score)
+            
+            # Prepare vulnerabilities list
+            vulnerabilities = []
+            if 6379 in self.services_by_port:
+                vulnerabilities.append('Redis exposed without authentication')
+            if 27017 in self.services_by_port:
+                vulnerabilities.append('MongoDB potentially without authentication')
+            if 23 in self.services_by_port:
+                vulnerabilities.append('Telnet service (unencrypted)')
+            
+            # Get external connections
+            external_conns = []
+            for conn in self.connections:
+                if conn.get('state') == 'ESTABLISHED':
+                    name = conn.get('name', '')
+                    if '127.0.0.1' not in name and 'localhost' not in name:
+                        if '->' in name:
+                            parts = name.split('->')
+                            if len(parts) == 2:
+                                dest = parts[1].split(':')[0]
+                                if not self._is_private_ip(dest):
+                                    external_conns.append({
+                                        'command': conn['command'],
+                                        'destination': dest
+                                    })
+            
+            # Make API request
+            payload = {
+                'services': services_data,
+                'security_score': score,
+                'vulnerabilities': vulnerabilities,
+                'external_connections': external_conns,
+                'suspicious_ports': suspicious_ports
+            }
+            
+            response = requests.post(
+                f"{api_url}/analyze",
+                json=payload,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"{Colors.YELLOW}⚠️  AI advisor returned status {response.status_code}{Colors.END}")
+                return None
+                
+        except requests.exceptions.ConnectionError:
+            print(f"{Colors.YELLOW}💡 Tip: Start the Security Advisor API for AI-powered recommendations{Colors.END}")
+            print(f"    Run: python3 security_advisor.py")
+            return None
+        except Exception as e:
+            print(f"{Colors.RED}❌ AI analysis error: {e}{Colors.END}")
+            return None
+    
+    def print_ai_recommendations(self, ai_response: Dict):
+        """Print AI-generated security recommendations - making them sparkle!"""
+        print(f"\n{Colors.CYAN}{Colors.BOLD}🤖 AI SECURITY ADVISOR RECOMMENDATIONS 🤖{Colors.END}")
+        print("=" * 80)
+        
+        # Overall assessment
+        print(f"\n{Colors.BOLD}Overall Assessment:{Colors.END}")
+        print(f"  {ai_response.get('overall_assessment', 'Analysis complete')}")
+        
+        # Risk level with color
+        risk_level = ai_response.get('risk_level', 'UNKNOWN')
+        risk_color = {
+            'CRITICAL': Colors.RED,
+            'HIGH': Colors.YELLOW,
+            'MEDIUM': Colors.CYAN,
+            'LOW': Colors.GREEN
+        }.get(risk_level, Colors.END)
+        
+        print(f"\n{Colors.BOLD}Risk Level: {risk_color}{risk_level}{Colors.END}")
+        
+        # Executive summary
+        print(f"\n{Colors.BOLD}Executive Summary:{Colors.END}")
+        print(f"  {ai_response.get('executive_summary', 'Network requires attention')}")
+        
+        # Recommendations
+        recommendations = ai_response.get('recommendations', [])
+        if recommendations:
+            print(f"\n{Colors.BOLD}Detailed Recommendations:{Colors.END}")
+            for i, rec in enumerate(recommendations[:10], 1):
+                severity_color = {
+                    'CRITICAL': Colors.RED,
+                    'HIGH': Colors.YELLOW,
+                    'MEDIUM': Colors.CYAN,
+                    'LOW': Colors.GREEN
+                }.get(rec.get('severity', 'MEDIUM'), Colors.END)
+                
+                print(f"\n  {i}. {severity_color}[{rec.get('severity', 'MEDIUM')}]{Colors.END} {rec.get('issue', 'Issue')}")
+                print(f"     {Colors.GREEN}→ {rec.get('recommendation', 'No specific recommendation')}{Colors.END}")
+                
+                # Show commands if available
+                commands = rec.get('commands', [])
+                if commands:
+                    print(f"     {Colors.BLUE}Commands to fix:{Colors.END}")
+                    for cmd in commands:
+                        print(f"       {Colors.CYAN}$ {cmd}{Colors.END}")
+        
+        # Action items
+        action_items = ai_response.get('action_items', [])
+        if action_items:
+            print(f"\n{Colors.BOLD}Immediate Action Items:{Colors.END}")
+            for item in action_items:
+                print(f"  {Colors.YELLOW}→{Colors.END} {item}")
+        
+        # Learning notes from Aye
+        learning = ai_response.get('learning_notes')
+        if learning:
+            print(f"\n{Colors.HEADER}{Colors.BOLD}📚 Aye's Learning Note:{Colors.END}")
+            print(f"  {learning}")
         
         print(f"\n{Colors.GREEN}{'=' * 80}{Colors.END}")
-        print(f"{Colors.BOLD}Analysis complete! Stay secure, Hue! 🛡️{Colors.END}\n")
+        print(f"{Colors.BOLD}AI analysis complete! Stay secure with smart recommendations! 🛡️{Colors.END}\n")
 
 def main():
     """Main function - where Aye and Hue's adventure begins"""
+    # Check for AI mode flag
+    enable_ai = '--ai' in sys.argv or '-a' in sys.argv or os.getenv('NETWATCH_AI', '').lower() == 'true'
+    
+    # Remove AI flags from argv if present
+    sys.argv = [arg for arg in sys.argv if arg not in ['--ai', '-a']]
+    
     # Read from stdin or file
     if len(sys.argv) > 1:
         with open(sys.argv[1], 'r') as f:
             lines = f.readlines()
     else:
-        print("Reading from stdin... (paste your lsof output)")
+        # Don't print if reading from pipe
+        if sys.stdin.isatty():
+            print("Reading from stdin... (paste your lsof output)")
         lines = sys.stdin.readlines()
     
     # Create analyzer and work the magic
     analyzer = NetworkAnalyzer()
     analyzer.analyze_data(lines)
     analyzer.print_summary()
+    
+    # Get AI recommendations if enabled
+    if enable_ai:
+        print(f"\n{Colors.CYAN}🤖 Consulting AI Security Advisor...{Colors.END}")
+        ai_response = analyzer.get_ai_recommendations(enable_ai=True)
+        if ai_response:
+            analyzer.print_ai_recommendations(ai_response)
+        else:
+            print(f"{Colors.YELLOW}💡 AI advisor not available - showing standard analysis only{Colors.END}")
 
 if __name__ == "__main__":
     main()

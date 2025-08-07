@@ -12,33 +12,41 @@ env/
 dist/
 build/
 
-# Test data
-network_data.txt
-*.log
-*.tmp
-test_*.txt
-
-# Output files
-network_report.txt
-security_report.txt
-*.csv
-output/
-
-# OS files
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-*~
+# Environment variables
+.env
+*.env.local
+*.env.*.local
 
 # IDE
 .vscode/
 .idea/
-*.sublime-*
+*.swp
+*.swo
+*~
+.DS_Store
 
-# Security - never commit sensitive data!
-*.key
-*.pem
-*.cert
-secrets.txt
-credentials.json
+# Logs
+*.log
+logs/
+*.pid
+
+# Test coverage
+htmlcov/
+.coverage
+.coverage.*
+.pytest_cache/
+.tox/
+
+# Documentation
+docs/_build/
+*.rst~
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Security Advisor specific
+/tmp/netwatch_advisor.pid
+/tmp/netwatch_advisor.log

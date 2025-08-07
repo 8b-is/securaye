@@ -1,0 +1,27 @@
+# NetWatch Security Advisor Dependencies
+# Aye & Hue's requirements for AI-powered network security! 🚀
+
+# FastAPI framework for our security advisor API
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+
+# HTTP client for OpenRouter API calls
+httpx==0.26.0
+
+# Data validation and settings management
+pydantic==2.5.3
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# For making HTTP requests from network_analyzer
+requests==2.31.0
+
+# Optional: For enhanced performance
+# aiodns==3.1.1
+# cchardet==2.1.7
+
+# Optional: For development
+# pytest==7.4.4
+# pytest-asyncio==0.23.3
+# black==23.12.1
+# ruff==0.1.11
