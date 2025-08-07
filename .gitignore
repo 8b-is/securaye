@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
+
+# Test data
+network_data.txt
+*.log
+*.tmp
+test_*.txt
+
+# Output files
+network_report.txt
+security_report.txt
+*.csv
+output/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Security - never commit sensitive data!
+*.key
+*.pem
+*.cert
+secrets.txt
+credentials.json
