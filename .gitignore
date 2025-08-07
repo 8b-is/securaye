@@ -48,5 +48,5 @@ temp/
 *.bak
 
 # Security Advisor specific
-/tmp/netwatch_advisor.pid
-/tmp/netwatch_advisor.log
+/tmp/securaye_advisor.pid
+/tmp/securaye_advisor.log

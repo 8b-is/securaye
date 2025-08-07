@@ -19,7 +19,7 @@ import hashlib
 
 # FastAPI app initialization - let's make it sparkle!
 app = FastAPI(
-    title="NetWatch Security Advisor",
+    title="SecurAye Security Advisor",
     description="AI-powered security recommendations for network analysis. Built with 💜 by Aye & Hue!",
     version="1.0.0"
 )
@@ -101,8 +101,8 @@ class SecurityAdvisor:
             base_url=config.OPENROUTER_BASE_URL,
             headers={
                 "Authorization": f"Bearer {config.OPENROUTER_API_KEY}",
-                "HTTP-Referer": "https://github.com/8b.is/netwatch",
-                "X-Title": "NetWatch Security Advisor"
+                "HTTP-Referer": "https://github.com/8b.is/securaye",
+                "X-Title": "SecurAye Security Advisor"
             },
             timeout=config.TIMEOUT
         )
@@ -359,7 +359,7 @@ advisor = SecurityAdvisor()
 async def root():
     """Welcome endpoint - Trish insisted on a friendly greeting!"""
     return {
-        "message": "🌐 NetWatch Security Advisor is running!",
+        "message": "🌐 SecurAye Security Advisor is running!",
         "status": "operational",
         "tip": "Send your network data to /analyze for AI-powered recommendations",
         "created_by": "Aye & Hue with Trish's sparkle ✨"
@@ -529,7 +529,7 @@ async def log_analysis(data: NetworkAnalysis, result: AIResponse):
 if __name__ == "__main__":
     import uvicorn
     
-    print("🚀 Starting NetWatch Security Advisor API...")
+    print("🚀 Starting SecurAye Security Advisor API...")
     print("📍 API will be available at: http://localhost:8888")
     print("📚 Documentation at: http://localhost:8888/docs")
     print("💡 Tip: Set OPENROUTER_API_KEY environment variable for AI analysis")

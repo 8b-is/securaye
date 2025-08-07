@@ -1,4 +1,4 @@
-# NetWatch Security Advisor Dependencies
+# SecurAye Security Advisor Dependencies
 # Aye & Hue's requirements for AI-powered network security! 🚀
 
 # FastAPI framework for our security advisor API

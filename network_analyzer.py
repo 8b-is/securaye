@@ -365,7 +365,7 @@ class NetworkAnalyzer:
         if 22 in self.services_by_port:
             print(f"    5. Use SSH keys instead of passwords, disable root login")
         print(f"    6. Consider using a firewall (pf/iptables) to restrict access")
-        print(f"    7. Regular security audits with 'netwatch.sh -w'")
+        print(f"    7. Regular security audits with 'securaye.sh -w'")
         
         print(f"\n{Colors.GREEN}{'=' * 80}{Colors.END}")
         print(f"{Colors.BOLD}Analysis complete! Stay secure, Hue! 🛡️{Colors.END}\n")
@@ -549,7 +549,7 @@ class NetworkAnalyzer:
 def main():
     """Main function - where Aye and Hue's adventure begins"""
     # Check for AI mode flag
-    enable_ai = '--ai' in sys.argv or '-a' in sys.argv or os.getenv('NETWATCH_AI', '').lower() == 'true'
+    enable_ai = '--ai' in sys.argv or '-a' in sys.argv or os.getenv('SECURAYE_AI', '').lower() == 'true'
     
     # Remove AI flags from argv if present
     sys.argv = [arg for arg in sys.argv if arg not in ['--ai', '-a']]

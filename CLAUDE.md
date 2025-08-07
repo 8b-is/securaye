@@ -4,17 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-NetWatch is a comprehensive network security monitoring tool that analyzes open ports, active connections, and security vulnerabilities. Built by Aye for Hue with Trish's enthusiastic approval, it provides colorful, real-time network analysis with security recommendations.
+SecurAye is a comprehensive network security monitoring tool that analyzes open ports, active connections, and security vulnerabilities. Built by Aye for Hue with Trish's enthusiastic approval, it provides colorful, real-time network analysis with security recommendations.
 
 ## Architecture
 
 ### Core Components
 
-1. **netwatch.sh** - Main entry point and orchestrator
+1. **securaye.sh** - Main entry point and orchestrator
    - Handles command-line arguments and user interface
    - Manages watch mode for continuous monitoring
    - Coordinates between lsof and the Python analyzer
-   - Location: `/netwatch.sh`
+   - Location: `/securaye.sh`
 
 2. **network_analyzer.py** - Analysis engine
    - Parses lsof output and categorizes services
@@ -29,7 +29,7 @@ NetWatch is a comprehensive network security monitoring tool that analyzes open 
 
 ### Data Flow
 ```
-User → netwatch.sh → sudo lsof → network_analyzer.py → Formatted Report
+User → securaye.sh → sudo lsof → network_analyzer.py → Formatted Report
          ↓                ↓                ↓
     Parse Args      Get Network      Analyze & Score
                         Data
@@ -37,25 +37,25 @@ User → netwatch.sh → sudo lsof → network_analyzer.py → Formatted Report
 
 ## Build/Lint/Test Commands
 
-### Running NetWatch
+### Running SecurAye
 ```bash
 # Quick security scan
-./netwatch.sh -q
+./securaye.sh -q
 
 # Full analysis
 sudo lsof -i -n -P | python3 network_analyzer.py
 
 # Watch mode (continuous monitoring)
-./netwatch.sh -w
+./securaye.sh -w
 
 # Watch with custom interval (5 seconds)
-./netwatch.sh -w -i 5
+./securaye.sh -w -i 5
 
 # Filter only listening services
-./netwatch.sh -l
+./securaye.sh -l
 
 # Save output to file
-./netwatch.sh -o report.txt
+./securaye.sh -o report.txt
 ```
 
 ### Python Development
@@ -73,15 +73,15 @@ python3 -m py_compile network_analyzer.py
 ### Shell Script Testing
 ```bash
 # Check shell script syntax
-bash -n netwatch.sh
+bash -n securaye.sh
 
 # Make executable if needed
-chmod +x netwatch.sh
+chmod +x securaye.sh
 ```
 
 ## Code Style Guidelines
 
-### Shell Script (netwatch.sh)
+### Shell Script (securaye.sh)
 - Use ANSI color codes for visual feedback
 - Include helpful error messages and usage examples
 - Trap signals for clean exit

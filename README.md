@@ -1,4 +1,4 @@
-# 🌐 NetWatch - Network Security Monitor
+# 🌐 SecurAye - Network Security Monitor
 
 > *"Because Trish in Accounting said our network security reports were boring!"* - Aye & Hue
 
@@ -35,11 +35,11 @@ A colorful, comprehensive network port analyzer and security scanner that makes 
 ### Quick Setup
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/netwatch.git
-cd netwatch
+git clone https://github.com/yourusername/securaye.git
+cd securaye
 
 # Make the shell script executable
-chmod +x netwatch.sh
+chmod +x securaye.sh
 
 # You're ready to go!
 ```
@@ -49,7 +49,7 @@ chmod +x netwatch.sh
 ### Quick Security Check
 ```bash
 # One-time security scan
-./netwatch.sh -q
+./securaye.sh -q
 
 # Full analysis with Python analyzer
 sudo lsof -i -n -P | python3 network_analyzer.py
@@ -58,31 +58,31 @@ sudo lsof -i -n -P | python3 network_analyzer.py
 ### Live Monitoring
 ```bash
 # Watch all ports with 2-second refresh
-./netwatch.sh -w
+./securaye.sh -w
 
 # Custom refresh interval (5 seconds)
-./netwatch.sh -w -i 5
+./securaye.sh -w -i 5
 ```
 
 ### Filtered Scans
 ```bash
 # Only show listening services
-./netwatch.sh -l
+./securaye.sh -l
 
 # Only show established connections
-./netwatch.sh -e
+./securaye.sh -e
 
 # Specific port range
-./netwatch.sh -p 8000-9000
+./securaye.sh -p 8000-9000
 ```
 
 ### Export Reports
 ```bash
 # Save output to file
-./netwatch.sh -o network_report.txt
+./securaye.sh -o network_report.txt
 
 # Combine with other options
-./netwatch.sh -w -l -o listening_services.log
+./securaye.sh -w -l -o listening_services.log
 ```
 
 ## 🔍 Understanding the Output
@@ -106,7 +106,7 @@ The tool provides specific recommendations based on your network configuration:
 2. **Add authentication** - Especially for databases like Redis and MongoDB
 3. **Use SSH keys** - Disable password authentication for SSH
 4. **Enable firewalls** - Use pf (macOS) or iptables (Linux) to restrict access
-5. **Regular audits** - Run NetWatch periodically to catch new issues
+5. **Regular audits** - Run SecurAye periodically to catch new issues
 
 ## 📝 Example Output
 

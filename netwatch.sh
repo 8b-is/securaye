@@ -1,5 +1,5 @@
 #!/bin/bash
-# NetWatch - Live Network Port Monitor
+# SecurAye - Live Network Port Monitor
 # Aye & Hue's real-time network detective!
 # Because Trish wants to see network magic happen LIVE!
 
@@ -27,7 +27,7 @@ QUICK_MODE=false
 print_banner() {
     echo -e "${CYAN}${BOLD}"
     echo "╔══════════════════════════════════════════════════════════╗"
-    echo "║         🌐 NetWatch - Live Network Monitor 🔍           ║"
+    echo "║         🌐 SecurAye - Live Network Monitor 🔍           ║"
     echo "║         Aye & Hue's Network Detective Tool              ║"
     echo "╚══════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
@@ -199,7 +199,7 @@ main() {
 }
 
 # Trap Ctrl+C for clean exit
-trap 'echo -e "\n${YELLOW}👋 NetWatch stopped. Stay secure, Hue!${NC}"; exit 0' INT
+trap 'echo -e "\n${YELLOW}👋 SecurAye stopped. Stay secure, Hue!${NC}"; exit 0' INT
 
 # Let's rock and roll!
 main

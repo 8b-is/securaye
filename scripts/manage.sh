@@ -1,5 +1,5 @@
 #!/bin/bash
-# NetWatch Management Script - The Control Center! 🎮
+# SecurAye Management Script - The Control Center! 🎮
 # Aye & Hue's service orchestrator with Trish's sparkle ✨
 # Because managing services should be fun and colorful!
 
@@ -20,8 +20,8 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 API_PORT=${SECURITY_ADVISOR_PORT:-8888}
-PID_FILE="/tmp/netwatch_advisor.pid"
-LOG_FILE="/tmp/netwatch_advisor.log"
+PID_FILE="/tmp/securaye_advisor.pid"
+LOG_FILE="/tmp/securaye_advisor.log"
 
 # Load environment variables if .env exists
 if [ -f "$PROJECT_ROOT/.env" ]; then
@@ -32,7 +32,7 @@ fi
 print_banner() {
     echo -e "${MAGENTA}${BOLD}"
     echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║     🚀 NetWatch Management Console 🚀                       ║"
+    echo "║     🚀 SecurAye Management Console 🚀                       ║"
     echo "║     Aye, Hue & Trish's Service Control Center               ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
@@ -185,7 +185,7 @@ view_logs() {
 quick_scan() {
     echo -e "${CYAN}🔍 Running Quick Network Scan...${NC}"
     cd "$PROJECT_ROOT"
-    ./netwatch.sh -q
+    ./securaye.sh -q
 }
 
 # Run a full scan with AI
@@ -200,7 +200,7 @@ ai_scan() {
     fi
     
     cd "$PROJECT_ROOT"
-    ./netwatch.sh -a
+    ./securaye.sh -a
 }
 
 # Watch mode
@@ -208,12 +208,12 @@ watch_mode() {
     echo -e "${CYAN}👁️  Starting Watch Mode...${NC}"
     echo -e "${YELLOW}Press Ctrl+C to stop${NC}"
     cd "$PROJECT_ROOT"
-    ./netwatch.sh -w
+    ./securaye.sh -w
 }
 
 # Setup environment
 setup() {
-    echo -e "${CYAN}🔧 Setting up NetWatch environment...${NC}"
+    echo -e "${CYAN}🔧 Setting up SecurAye environment...${NC}"
     
     # Copy .env.example if .env doesn't exist
     if [ ! -f "$PROJECT_ROOT/.env" ]; then
@@ -225,7 +225,7 @@ setup() {
     fi
     
     # Make scripts executable
-    chmod +x "$PROJECT_ROOT/netwatch.sh"
+    chmod +x "$PROJECT_ROOT/securaye.sh"
     chmod +x "$PROJECT_ROOT/scripts/manage.sh"
     echo -e "${GREEN}✅ Scripts are executable${NC}"
     
@@ -256,7 +256,7 @@ test_integration() {
     else
         echo -e "${YELLOW}⚠️  No sample data file found${NC}"
         echo -e "${CYAN}   Running live test instead...${NC}"
-        ./netwatch.sh -a -q
+        ./securaye.sh -a -q
     fi
 }
 
