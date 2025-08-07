@@ -39,7 +39,8 @@ class Config:
     OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
     OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
     # Default to a fast, cost-effective model - you can change this!
-    DEFAULT_MODEL = os.getenv("AI_MODEL", "anthropic/claude-3-haiku")
+    DEFAULT_MODEL = os.getenv("AI_MODEL", "securaye")  # Use your preferred model here
+    # API settings
     MAX_RETRIES = 3
     TIMEOUT = 30
     
@@ -100,7 +101,7 @@ class SecurityAdvisor:
             base_url=config.OPENROUTER_BASE_URL,
             headers={
                 "Authorization": f"Bearer {config.OPENROUTER_API_KEY}",
-                "HTTP-Referer": "https://github.com/yourusername/netwatch",
+                "HTTP-Referer": "https://github.com/8b.is/netwatch",
                 "X-Title": "NetWatch Security Advisor"
             },
             timeout=config.TIMEOUT
