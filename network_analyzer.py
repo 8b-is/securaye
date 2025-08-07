@@ -58,47 +58,58 @@ class NetworkAnalyzer:
             return None
             
         try:
+            # The lsof format varies but typically:
+            # COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME
+            # But sometimes USER field is longer, so we need to be smart
+            
+            # Find where TCP/UDP appears - that's our protocol field
+            protocol_idx = -1
+            for i, part in enumerate(parts):
+                if part in ['TCP', 'UDP', 'ICMP', 'ICMPV6']:
+                    protocol_idx = i
+                    break
+            
+            if protocol_idx == -1:
+                # Not a network connection we care about
+                return None
+            
+            # Build the name field from protocol index onwards
+            name_parts = parts[protocol_idx+1:]
+            name = ' '.join(name_parts) if name_parts else ''
+            
             data = {
                 'command': parts[0],
                 'pid': parts[1],
-                'ppid': parts[2],
-                'user': parts[3],
-                'fd': parts[4],
-                'type': parts[5],
-                'device': parts[6],
-                'size': parts[7],
-                'node': parts[8],
-                'name': ' '.join(parts[9:]) if len(parts) > 9 else ''
+                'user': parts[2],  # Sometimes this is longer like _mdnsresponder
+                'protocol': parts[protocol_idx],
+                'name': name,
+                'full_line': line  # Keep for debugging
             }
             
             # Parse the network info from the name field
-            if 'TCP' in data['name'] or 'UDP' in data['name']:
-                self._parse_network_info(data)
+            self._parse_network_info(data)
                 
             return data
         except Exception as e:
             # Hue sometimes gives us weird data, let's be graceful
-            print(f"Debug: Could not parse line: {line[:50]}...")
             return None
     
     def _parse_network_info(self, data: Dict):
         """Extract network details - the juicy bits Trish loves"""
         name = data['name']
         
-        # Extract protocol
-        if 'TCP' in name:
-            data['protocol'] = 'TCP'
-        elif 'UDP' in name:
-            data['protocol'] = 'UDP'
-        else:
-            data['protocol'] = 'Unknown'
-        
+        # Protocol is already set from parse_line
         # Check if listening or connected
         if '(LISTEN)' in name:
             data['state'] = 'LISTENING'
             # Extract port from patterns like *:80 or 127.0.0.1:8080
-            port_match = re.search(r':(\d+)\s*\(LISTEN\)', name)
-            if port_match:
+            port_match = re.search(r':(\d+)', name)
+            if not port_match:
+                # Try to get it from the address part
+                addr_match = re.search(r'(\*|[\d\.]+|\[.*?\]):(\d+)', name)
+                if addr_match:
+                    data['port'] = int(addr_match.group(2))
+            else:
                 data['port'] = int(port_match.group(1))
         elif '(ESTABLISHED)' in name:
             data['state'] = 'ESTABLISHED'
@@ -107,11 +118,13 @@ class NetworkAnalyzer:
         elif '(SYN_SENT)' in name:
             data['state'] = 'SYN_SENT'
         else:
+            # For UDP or other states
             data['state'] = 'OTHER'
-            # For UDP without state
-            port_match = re.search(r'\*:(\d+)', name)
-            if port_match:
-                data['port'] = int(port_match.group(1))
+            # Try to extract port for UDP
+            if data['protocol'] == 'UDP':
+                port_match = re.search(r':(\d+)$', name)
+                if port_match:
+                    data['port'] = int(port_match.group(1))
     
     def categorize_service(self, command: str) -> str:
         """Figure out what category this service belongs to - organization is key!"""
