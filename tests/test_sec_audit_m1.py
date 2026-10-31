@@ -5,6 +5,10 @@ import unittest
 
 from sec_audit.agent00_state_db import SecAuditStateDB, validate_finding_envelope
 from sec_audit.agent01_mirror_diff import compare_tarball_vs_git
+from sec_audit.ultrafoldpop_orchestrator import (
+    CorpusRuleIndexer,
+    run_ultrafoldpop_package_pipeline,
+)
 
 
 class TestSecAuditMilestone1(unittest.TestCase):
@@ -99,6 +103,62 @@ class TestSecAuditMilestone1(unittest.TestCase):
             self.assertEqual(summary["recorded_envelopes"], 1)
             self.assertEqual(summary["native_artifacts"], 1)
             self.assertEqual(summary["status_breakdown"].get("CANDIDATE"), 1)
+
+    def test_ultrafoldpop_e2e_bilingual_jpcert_advisory_and_pass3_pruning(self) -> None:
+        indexer = CorpusRuleIndexer()
+        cinfo = indexer.index_corpora()
+        self.assertGreater(cinfo["indexed_repositories"], 0)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = pathlib.Path(tmp)
+            db = SecAuditStateDB(tmp_path / "sec_audit.sqlite3")
+            db.initialize_schema_and_manifest(self.manifest_path)
+
+            git_dir = tmp_path / "git_php"
+            tar_dir = tmp_path / "tar_php"
+            git_dir.mkdir()
+            tar_dir.mkdir()
+
+            vuln_php = (
+                "<?php\n"
+                "class Gadget {\n"
+                "  public function __wakeup() {\n"
+                "    $data = unserialize($this->payload);\n"
+                "    proc_open($this->cmd, [], $pipes);\n"
+                "  }\n"
+                "}\n"
+            )
+            sanitized_php = (
+                "<?php\n"
+                "class SafeGadget {\n"
+                "  public function __wakeup() {\n"
+                "    $data = unserialize($this->payload, ['allowed_classes' => false]);\n"
+                "    proc_open(escapeshellarg($this->cmd), [], $pipes);\n"
+                "  }\n"
+                "}\n"
+            )
+            (git_dir / "Gadget.php").write_text(vuln_php, encoding="utf-8")
+            (tar_dir / "Gadget.php").write_text(vuln_php, encoding="utf-8")
+            (git_dir / "SafeGadget.php").write_text(sanitized_php, encoding="utf-8")
+            (tar_dir / "SafeGadget.php").write_text(sanitized_php, encoding="utf-8")
+
+            res = run_ultrafoldpop_package_pipeline(
+                db=db,
+                package_id="packagist:monolog/monolog",
+                ecosystem="packagist",
+                package_name="monolog/monolog",
+                version="3.8.0",
+                tarball_dir=tar_dir,
+                git_dir=git_dir,
+            )
+            self.assertEqual(res["active_folded_chains"], 1)
+            self.assertEqual(res["pruned_folded_chains"], 1)
+            self.assertEqual(res["envelope"]["status"], "STATICALLY_CONFIRMED")
+            self.assertEqual(len(res["jpcert_ipa_advisories"]), 1)
+            adv = res["jpcert_ipa_advisories"][0]
+            self.assertEqual(adv["cwe_id"], "CWE-502")
+            self.assertIn("早期警戒セキュリティ勧告", adv["bilingual_bulletin_markdown"])
+            self.assertIn("--network=none", res["podman_canary_cmd"])
 
 
 if __name__ == "__main__":
