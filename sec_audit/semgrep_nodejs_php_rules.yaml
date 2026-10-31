@@ -1,0 +1,112 @@
+rules:
+  - id: sec-audit.nodejs.prototype-pollution-to-exec-or-vm
+    mode: taint
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >
+      Untrusted property write to __proto__ or constructor.prototype reaches
+      child_process, vm, or template compilation sink without Object.create(null)
+      or Object.prototype.hasOwnProperty guard.
+    metadata:
+      cwe: "CWE-1321: Improperly Controlled Modification of Object Prototype Attributes ('Prototype Pollution')"
+      stage: "Stage-2"
+      agent_id: "Agent-02"
+    pattern-sources:
+      - pattern: $OBJ["__proto__"]
+      - pattern: $OBJ.__proto__
+      - pattern: $OBJ["constructor"]["prototype"]
+      - pattern: $OBJ[$KEY][$SUBKEY] = $VAL
+    pattern-sanitizers:
+      - pattern: Object.create(null)
+      - pattern: Object.prototype.hasOwnProperty.call($OBJ, $KEY)
+      - pattern: Object.hasOwn($OBJ, $KEY)
+    pattern-sinks:
+      - pattern: child_process.exec($CMD, ...)
+      - pattern: child_process.execSync($CMD, ...)
+      - pattern: child_process.spawn($CMD, ...)
+      - pattern: child_process.fork($MODULE, ...)
+      - pattern: vm.runInNewContext($CODE, ...)
+      - pattern: vm.runInThisContext($CODE, ...)
+
+  - id: sec-audit.nodejs.path-traversal-to-fs-mutation
+    mode: taint
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: >
+      Untrusted path segment flows through path.join or path.resolve into
+      fs.chmod, fs.chown, fs.writeFile, or fs.symlink without realpath prefix confinement.
+    metadata:
+      cwe: "CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')"
+      stage: "Stage-2"
+      agent_id: "Agent-02"
+    pattern-sources:
+      - pattern: path.join($BASE, $UNTRUSTED, ...)
+      - pattern: path.resolve($BASE, $UNTRUSTED, ...)
+    pattern-sanitizers:
+      - pattern: fs.realpathSync($PATH).startsWith($PREFIX)
+    pattern-sinks:
+      - pattern: fs.chmod($TARGET, ...)
+      - pattern: fs.chmodSync($TARGET, ...)
+      - pattern: fs.chown($TARGET, ...)
+      - pattern: fs.chownSync($TARGET, ...)
+      - pattern: fs.writeFile($TARGET, ...)
+      - pattern: fs.writeFileSync($TARGET, ...)
+      - pattern: fs.symlink($SRC, $TARGET, ...)
+      - pattern: fs.symlinkSync($SRC, $TARGET, ...)
+
+  - id: sec-audit.php.pop-chain-magic-to-sink
+    mode: taint
+    languages: [php]
+    severity: ERROR
+    message: >
+      PHP POP chain gadget starting in __wakeup, __destruct, __toString, or __call
+      reaches dynamic callback (call_user_func), file mutation (file_put_contents, unlink),
+      or command execution (proc_open).
+    metadata:
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+      stage: "Stage-2"
+      agent_id: "Agent-02"
+    pattern-sources:
+      - pattern: |
+          function __wakeup(...) {
+            ...
+          }
+      - pattern: |
+          function __destruct(...) {
+            ...
+          }
+      - pattern: |
+          function __toString(...) {
+            ...
+          }
+      - pattern: |
+          function __call($NAME, $ARGS) {
+            ...
+          }
+    pattern-sanitizers:
+      - pattern: escapeshellarg($ARG)
+      - pattern: realpath($PATH)
+    pattern-sinks:
+      - pattern: call_user_func($CB, ...)
+      - pattern: call_user_func_array($CB, ...)
+      - pattern: file_put_contents($PATH, ...)
+      - pattern: unlink($PATH)
+      - pattern: proc_open($CMD, ...)
+      - pattern: shell_exec($CMD)
+      - pattern: system($CMD, ...)
+
+  - id: sec-audit.php.unserialize-without-allowed-classes-false
+    languages: [php]
+    severity: ERROR
+    message: >
+      unserialize() invoked without ['allowed_classes' => false] or phar:// stream wrapper guard.
+    metadata:
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+      stage: "Stage-2"
+      agent_id: "Agent-02"
+    patterns:
+      - pattern-either:
+          - pattern: unserialize($DATA)
+          - pattern: file_exists($PHAR_URI)
+          - pattern: file_get_contents($PHAR_URI)
+      - pattern-not: unserialize($DATA, ["allowed_classes" => false])
