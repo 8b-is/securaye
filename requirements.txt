@@ -11,7 +11,7 @@ httpx==0.26.0
 # Data validation and settings management
 pydantic==2.5.3
 pydantic-settings==2.1.0
-python-dotenv==1.0.0
+python-dotenv==1.2.2
 
 # For making HTTP requests from network_analyzer
 requests==2.31.0
