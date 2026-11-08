@@ -14,7 +14,7 @@ pydantic-settings==2.1.0
 python-dotenv==1.0.0
 
 # For making HTTP requests from network_analyzer
-requests==2.31.0
+requests==2.33.0
 
 # Optional: For enhanced performance
 # aiodns==3.1.1
